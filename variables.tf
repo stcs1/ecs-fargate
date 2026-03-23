@@ -20,15 +20,15 @@ variable "public_subnet_3_cidr" {
   description = "Public Subnet 3 cidr"
 }
 
-variable "private_subnet-1-cidr" {
-  description = "Private-Subnet 1 CIDR"
+variable "private_subnet_4_cidr" {
+  description = "Private-Subnet 4 CIDR"
 }
 
-variable "private_subnet-2-cidr" {
-  description = "Private-Subnet 2 CIDR"
+variable "private_subnet_5_cidr" {
+  description = "Private-Subnet 5 CIDR"
 }
 
-variable "private_subnet-3-cidr" {
-  description = "Private-Subnet 3 CIDR"
+variable "private_subnet_6_cidr" {
+  description = "Private-Subnet 6 CIDR"
 }
 
