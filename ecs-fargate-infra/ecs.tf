@@ -1,19 +1,20 @@
-# provider "aws" {
-#   region = "${var.region}"
-# }
+provider "aws" {
+  region = "${var.region}"
+}
 
-# terraform {
-#   backend "s3" {}
-# }
+terraform {
+  backend "s3" {}
+  region = "${var.region}"
+}
 
-# data "terraform_remote_state" "ecs_fargate_infra" {
-#     backend = "s3"
-#     config = {
-#         bucket = "ecs-fargate-infra-state"
-#         key    = "terraform.tfstate"
-#         region = "${var.region}"
-#     }
-# }
+data "terraform_remote_state" "ecs_fargate_infra" {
+    backend = "s3"
+    config = {
+        bucket = "${var.s3}"
+        key    = "${var.key}"
+        region = "${var.region}"
+    }
+}
 
 resource "aws_ecs_cluster" "dev-fargare-cluster" {
   name = "dev-fargate-cluster"
