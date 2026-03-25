@@ -1,4 +1,8 @@
 ecs_cluster_name = "dev-fargate-cluster"
 ecs_domain_name  = "dev-fargate-cluster.example.com"
-
-
+key = "terraform.tfstate"
+s3 = "ecs-fargate-terraform-remotestate-e1"
+internet_cidr_block = "0.0.0.0/0"
+vpc_cidr_block = "10.0.0.0/16"
+public_subnet_1_cidr = "10.0.1.0/24"
+public_subnet_2_cidr = "10.0.2.0/24"

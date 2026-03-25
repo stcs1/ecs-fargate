@@ -112,28 +112,28 @@ resource "aws_route_table_association" "private-route-table-3-association" {
 }
 
 resource "aws_eip" "elastic-ip" {
-    domain = "vpc"
-    associate_with_private_ip = "10.0.0.5"
+  domain                    = "vpc"
+  associate_with_private_ip = "10.0.0.5"
 
-    tags = {
-        Name = "elastic-ip"
-    }
+  tags = {
+    Name = "elastic-ip"
+  }
 }
 
 resource "aws_nat_gateway" "nat-gw" {
-  allocation_id = "${aws_eip.elastic-ip.id}"
-  subnet_id = "${aws_subnet.public-subnet-1.id}"
+  allocation_id = aws_eip.elastic-ip.id
+  subnet_id     = aws_subnet.public-subnet-1.id
 
-    tags = {
-        Name = "nat-gw"
-    }
-    depends_on = [aws_eip.elastic-ip]
+  tags = {
+    Name = "nat-gw"
+  }
+  depends_on = [aws_eip.elastic-ip]
 }
 
 resource "aws_route" "nat-gw-route" {
-    route_table_id = "${aws_route_table.private-route-table.id}"
-    destination_cidr_block = "0.0.0.0/0"
-    nat_gateway_id = "${aws_nat_gateway.nat-gw.id}"
+  route_table_id         = aws_route_table.private-route-table.id
+  destination_cidr_block = "0.0.0.0/0"
+  nat_gateway_id         = aws_nat_gateway.nat-gw.id
 
 }
 

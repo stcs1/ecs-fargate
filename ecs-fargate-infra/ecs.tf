@@ -2,24 +2,44 @@ provider "aws" {
   region = var.region
 }
 
-# data "terraform_remote_state" "ecs_fargate_infra" {
-#   backend = "s3"
-#   config = {
-#     bucket = "${var.s3}"
-#     key    = "${var.key}"
-#     region = "${var.region}"
-#   }
-# }
+data "terraform_remote_state" "ecs_fargate_infra" {
+  backend = "s3"
 
-resource "aws_ecs_cluster" "dev-fargare-cluster" {
-  name = "dev-fargate-cluster"
-
+  config = {
+    bucket = "ecs-fargate-terraform-remotestate"
+    key    = "path/to/terraform.tfstate"
+    region = "us-east-1"
+  }
 }
 
-resource "aws_alb" "ecs-cluster-alb" {
+resource "aws_ecs_cluster" "dev-fargate-cluster" {
+  name = "dev-fargate-cluster"
+}
+
+resource "aws_security_group" "ecs_alb_security_group" {
+  name = "${var.ecs_cluster_name}-alb-sg"
+  description = "Security group for ALB in ${var.ecs_cluster_name}"
+  vpc_id = data.terraform_remote_state.ecs_fargate_infra.vpc_id
+
+  ingress {
+    from_port   = 443
+    to_port     = 443
+    protocol    = "tcp"
+    cidr_blocks = var.internet_cidr_blocks
+  }
+
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = var.internet_cidr_blocks
+  }
+}
+
+resource "aws_alb" "ecs_cluster_alb" {
   name            = "${var.ecs_cluster_name}-alb"
   internal        = false
-  security_groups = [aws_security_group.ecs-alb-sg.id]
+  security_groups = [aws_security_group.ecs_alb_security_group.id]
   subnets         = data.terraform_remote_state.ecs_fargate_infra.public_subnet_ids
 
   tags = {
@@ -28,11 +48,15 @@ resource "aws_alb" "ecs-cluster-alb" {
 }
 
 resource "aws_route53_record" "ecs_alb_record" {
-  name    = "${var.ecs_cluster_name}.${var.domain_name}"
-  type    = "CNAME"
+  name    = "$*.${var.domain_name}"
+  type    = "A"
   zone_id = data.aws_route53_zone.domain_zone.zone_id
-  records = [aws_alb.ecs-cluster-alb.dns_name]
-  ttl     = 60
+
+  alias {
+    evaluate_target_health = false
+    name = "aws_alb.ecs_cluster_alb.dns_name"
+    zone_id = "${aws_alb.ecs_cluster_alb.zone_id}"
+  }
 }
 
 resource "aws_alb_target_group" "ecs-cluster-tg" {

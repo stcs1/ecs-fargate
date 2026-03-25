@@ -12,7 +12,7 @@ data "aws_route53_zone" "domain_zone" {
   private_zone = false
 }
 
-resource "aws_route53_record" "cert_validation" {
+resource "aws_route53_record" "cert_validation_record" {
   for_each        = { for dvo in aws_acm_certificate.ecs_domain_cert.domain_validation_options : dvo.domain_name => dvo }
   name            = each.value.resource_record_name
   type            = each.value.resource_record_type
