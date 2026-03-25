@@ -7,11 +7,7 @@ variable "ecs_cluster_name" {
 }
 
 variable "ecs_domain_name" {
-  
-}
-
-variable "s3" {
-  default = "ecs-fargate-infra-state"
+    default = "dev-fargate-cluster.example.com"
 }
 
 variable "key" {
