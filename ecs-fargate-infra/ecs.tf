@@ -2,13 +2,18 @@ provider "aws" {
   region = var.region
 }
 
+terraform {
+  backend "s3" {   
+  }
+}
+
 data "terraform_remote_state" "ecs_fargate_infra" {
   backend = "s3"
 
   config = {
-    bucket = "ecs-fargate-terraform-remotestate"
-    key    = "path/to/terraform.tfstate"
-    region = "us-east-1"
+    region = "${var.region}"
+    bucket = "${var.remote_state_bucket}"
+    key    = "${var.remote_state_key}"
   }
 }
 
@@ -16,31 +21,31 @@ resource "aws_ecs_cluster" "dev-fargate-cluster" {
   name = "dev-fargate-cluster"
 }
 
-resource "aws_security_group" "ecs_alb_security_group" {
-  name = "${var.ecs_cluster_name}-alb-sg"
-  description = "Security group for ALB in ${var.ecs_cluster_name}"
-  vpc_id = data.terraform_remote_state.ecs_fargate_infra.vpc_id
+# resource "aws_security_group" "ecs_alb_security_group" {
+#   name = "${var.ecs_cluster_name}-alb-sg"
+#   description = "Security group for ALB in ${var.ecs_cluster_name}"
+#   vpc_id = data.terraform_remote_state.ecs_fargate_infra.vpc_id
 
-  ingress {
-    from_port   = 443
-    to_port     = 443
-    protocol    = "tcp"
-    cidr_blocks = var.internet_cidr_blocks
-  }
+#   ingress {
+#     from_port   = 443
+#     to_port     = 443
+#     protocol    = "tcp"
+#     cidr_blocks = var.internet_cidr_blocks
+#   }
 
-  egress {
-    from_port   = 0
-    to_port     = 0
-    protocol    = "-1"
-    cidr_blocks = var.internet_cidr_blocks
-  }
-}
+#   egress {
+#     from_port   = 0
+#     to_port     = 0
+#     protocol    = "-1"
+#     cidr_blocks = var.internet_cidr_blocks
+#   }
+# }
 
 resource "aws_alb" "ecs_cluster_alb" {
   name            = "${var.ecs_cluster_name}-alb"
   internal        = false
   security_groups = [aws_security_group.ecs_alb_security_group.id]
-  subnets         = data.terraform_remote_state.ecs_fargate_infra.public_subnet_ids
+  subnets = "${split(",", join(",", data.terraform_remote_state.ecs_fargate_infra.public_subnets))}"
 
   tags = {
     Name = "${var.ecs_cluster_name}-alb"
@@ -63,7 +68,7 @@ resource "aws_alb_target_group" "ecs-cluster-tg" {
   name     = "${var.ecs_cluster_name}-tg"
   port     = 80
   protocol = "HTTP"
-  vpc_id   = data.terraform_remote_state.ecs_fargate_infra.vpc_id
+  vpc_id = data.terraform_remote_state.ecs_fargate_infra.outputs.vpc_id
 
   tags = {
     Name = "${var.ecs_cluster_name}-tg"
@@ -111,4 +116,3 @@ resource "aws_iam_role_policy_attachment" "ecs-cluster-role-attachment" {
     role       = aws_iam_role.ecs-cluster-role.name
     policy_arn = "arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy"
 }
-
