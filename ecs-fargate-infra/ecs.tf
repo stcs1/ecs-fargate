@@ -2,11 +2,6 @@ provider "aws" {
   region = var.region
 }
 
-terraform {
-  backend "s3" {   
-  }
-}
-
 data "terraform_remote_state" "ecs_fargate_infra" {
   backend = "s3"
 
