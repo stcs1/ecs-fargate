@@ -6,6 +6,7 @@ variable "remote_state_key" {}
 variable "remote_state_region" {}
 
 variable "ecs_cluster_name" {}
+variable "ecs_service_name" {}
 variable "domain_name" {}
 variable "ecs_domain_name" {}
 variable "key" {}
